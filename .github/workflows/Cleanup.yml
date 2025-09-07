@@ -23,7 +23,7 @@ jobs:
     steps:
       - name: Delete Artifacts
         if: ${{ inputs.delete_artifacts == 'true' }}
-        uses: actions/github-script@v8
+        uses: actions/github-script@v6
         with:
           script: |
             const owner = context.repo.owner;
@@ -32,19 +32,24 @@ jobs:
               github.rest.actions.listArtifactsForRepo,
               { owner, repo, per_page: 100 }
             );
+            console.log(`Found ${artifacts.length} artifacts to delete`);
             for (const artifact of artifacts) {
               if (artifact.workflow_run && artifact.workflow_run.id === context.runId) continue;
-              console.log(`Deleting artifact: ${artifact.name}`);
-              await github.rest.actions.deleteArtifact({
-                owner,
-                repo,
-                artifact_id: artifact.id,
-              });
+              console.log(`Deleting artifact: ${artifact.name} (ID: ${artifact.id})`);
+              try {
+                await github.rest.actions.deleteArtifact({
+                  owner,
+                  repo,
+                  artifact_id: artifact.id,
+                });
+              } catch (error) {
+                console.log(`Failed to delete artifact ${artifact.id}: ${error.message}`);
+              }
             }
 
       - name: Delete Workflow Runs
         if: ${{ inputs.delete_runs == 'true' }}
-        uses: actions/github-script@v8
+        uses: actions/github-script@v6
         with:
           script: |
             const owner = context.repo.owner;
@@ -53,11 +58,16 @@ jobs:
               github.rest.actions.listWorkflowRunsForRepo,
               { owner, repo, status: 'completed', per_page: 100 }
             );
+            console.log(`Found ${runs.length} runs to delete`);
             for (const run of runs) {
               console.log(`Deleting run: ${run.id}`);
-              await github.rest.actions.deleteWorkflowRun({
-                owner,
-                repo,
-                run_id: run.id,
-              });
+              try {
+                await github.rest.actions.deleteWorkflowRun({
+                  owner,
+                  repo,
+                  run_id: run.id,
+                });
+              } catch (error) {
+                console.log(`Failed to delete run ${run.id}: ${error.message}`);
+              }
             }
