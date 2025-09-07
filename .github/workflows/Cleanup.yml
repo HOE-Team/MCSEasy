@@ -1,55 +1,63 @@
-name: 清理构建工作流
+name: Cleanup Workflow Runs
 
 on:
   workflow_dispatch:
     inputs:
-      delete_github_artifacts:
-        description: '是否删除 GitHub Actions 上的托管'
+      delete_runs:
+        description: 'Delete all workflow runs'
         required: true
-        default: 'false'
+        default: 'true'
         type: boolean
-      artifact_prefix:
-        description: '被删除托管前缀的文件名'
-        required: false
-        default: 'MCSEasy'
-        type: string
+      delete_artifacts:
+        description: 'Delete all artifacts'
+        required: true
+        default: 'true'
+        type: boolean
 
 jobs:
-  cleanup_files:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Remove local build files
-        run: |
-          rm -rf dist/
-          rm -rf build_*/
-          rm -rf build-*/
-          rm -f *.spec
-
-  delete_artifacts:
-    if: ${{ inputs.delete_github_artifacts }}
+  cleanup:
     runs-on: ubuntu-latest
     permissions:
       actions: write
+
     steps:
-      - name: Delete GitHub Artifacts
+      - name: Delete Artifacts
+        if: ${{ inputs.delete_artifacts == 'true' }}
         uses: actions/github-script@v8
-        env:
-          PREFIX: ${{ inputs.artifact_prefix }}
         with:
           script: |
-            const prefix = process.env.PREFIX;
             const owner = context.repo.owner;
             const repo = context.repo.repo;
-            const artifacts = await github.paginate(github.rest.actions.listArtifactsForRepo, { owner, repo, per_page: 100 });
-            if (artifacts.length === 0) {
-              console.log("No artifacts found");
-            }
+            const artifacts = await github.paginate(
+              github.rest.actions.listArtifactsForRepo,
+              { owner, repo, per_page: 100 }
+            );
             for (const artifact of artifacts) {
-              if (artifact.name.includes(prefix)) {
-                console.log(`Deleting artifact: ${artifact.name}`);
-                await github.rest.actions.deleteArtifact({ owner, repo, artifact_id: artifact.id });
-              }
+              if (artifact.workflow_run && artifact.workflow_run.id === context.runId) continue;
+              console.log(`Deleting artifact: ${artifact.name}`);
+              await github.rest.actions.deleteArtifact({
+                owner,
+                repo,
+                artifact_id: artifact.id,
+              });
+            }
+
+      - name: Delete Workflow Runs
+        if: ${{ inputs.delete_runs == 'true' }}
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const runs = await github.paginate(
+              github.rest.actions.listWorkflowRunsForRepo,
+              { owner, repo, status: 'completed', per_page: 100 }
+            );
+            for (const run of runs) {
+              console.log(`Deleting run: ${run.id}`);
+              await github.rest.actions.deleteWorkflowRun({
+                owner,
+                repo,
+                run_id: run.id,
+              });
             }
