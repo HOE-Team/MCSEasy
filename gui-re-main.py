@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QH
                              QPushButton, QComboBox, QFileDialog, QMessageBox,
                              QLabel, QLineEdit, QPlainTextEdit, QScrollArea,
                              QGroupBox, QStackedWidget, QListWidget, QListWidgetItem,
-                             QTextBrowser, QCheckBox)
+                             QTextBrowser, QCheckBox, QSlider)
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QProcess, QTimer, QCoreApplication, QSettings
 from PyQt5.QtGui import QFont, QTextCursor, QIcon
 import urllib.request
@@ -42,6 +42,19 @@ logger = logging.getLogger(__name__)
 # ==================== 全局常量和辅助函数 ====================
 EULA_FILE_NAME = 'eula.txt'
 SERVER_PROPERTIES_FILE = 'server.properties'
+
+# 定义默认设置常量
+DEFAULT_SETTINGS = {
+    "theme": "light",
+    "log_is_dark": True,
+    "window_transparency_percent": 100,
+    "path": "",
+    "min_mem": "2",
+    "max_mem": "4",
+    "custom_args": "",
+    "force_stop_on_timeout": False,
+    "stop_timeout": "30"
+}
 
 def load_list_file(filename: str) -> list:
     """从文本文件加载Python列表，兼容PyInstaller打包"""
@@ -299,8 +312,8 @@ class ServerDeployWindow(QMainWindow):
         else:
             icon_path = 'icon.ico'
         self.setWindowIcon(QIcon(icon_path))
-        self.setWindowTitle("简单 Minecraft 服务器部署工具(MCSEasy) Version-1.2.0.0-RC2")
-        self.setGeometry(100, 100, 1200, 600)
+        self.setWindowTitle("简单 Minecraft 服务器部署工具(MCSEasy) Version-1.2.0.0-RC3")
+        self.setGeometry(100, 100, 1400, 600) # 窗口大小1400x600
         self.download_thread = None
         self.version_fetch_thread = None
         self.server_process = None
@@ -308,13 +321,18 @@ class ServerDeployWindow(QMainWindow):
         self.has_unsaved_changes = False
         self.config_controls = {}
         self.original_config = {}
-        self.current_theme = "light"
-        self.log_is_dark = True
-        self.window_is_transparent = False
+        
+        # 从默认设置初始化属性
+        self.current_theme = DEFAULT_SETTINGS["theme"]
+        self.log_is_dark = DEFAULT_SETTINGS["log_is_dark"]
+        self.window_transparency_percent = DEFAULT_SETTINGS["window_transparency_percent"]
+
         self.stop_timer = None
         
+        # 修正: 在UI创建之后再加载并应用设置
         self.load_settings()
         self._setup_ui()
+        self._load_settings() # 新增: 在UI创建后加载并应用设置
         self._apply_styles()
         self._connect_signals()
         
@@ -338,16 +356,27 @@ class ServerDeployWindow(QMainWindow):
     def load_settings(self):
         """加载用户设置，例如主题和日志颜色"""
         settings = QSettings("MyServerApp", "ServerDeployWindow")
-        self.current_theme = settings.value("theme", "light")
-        self.log_is_dark = settings.value("log_is_dark", True, type=bool)
-        self.window_is_transparent = settings.value("window_is_transparent", False, type=bool)
+        self.current_theme = settings.value("theme", DEFAULT_SETTINGS["theme"])
+        self.log_is_dark = settings.value("log_is_dark", DEFAULT_SETTINGS["log_is_dark"], type=bool)
+        self.window_transparency_percent = settings.value("window_transparency_percent", DEFAULT_SETTINGS["window_transparency_percent"], type=int)
 
     def save_settings(self):
         """保存用户设置"""
         settings = QSettings("MyServerApp", "ServerDeployWindow")
         settings.setValue("theme", self.current_theme)
         settings.setValue("log_is_dark", self.log_is_dark)
-        settings.setValue("window_is_transparent", self.window_is_transparent)
+        settings.setValue("window_transparency_percent", self.window_transparency_percent)
+
+        # 保存其他设置页面的值
+        settings.setValue("path", self.path_label.text())
+        settings.setValue("min_mem", self.mem_min.text())
+        settings.setValue("max_mem", self.mem_max.text())
+        settings.setValue("custom_args", self.custom_args_input.text())
+        settings.setValue("force_stop_on_timeout", self.force_stop_checkbox.isChecked())
+        settings.setValue("stop_timeout", self.stop_timeout_input.text())
+        
+        self.log_signal.emit("[MCSEasy-INFO] 配置已自动保存")
+
 
     def closeEvent(self, event):
         """在窗口关闭时保存设置"""
@@ -440,7 +469,7 @@ class ServerDeployWindow(QMainWindow):
         log_color = "#d0d0d0" if self.log_is_dark else "#202020"
         
         # 设置窗口透明度
-        self.setWindowOpacity(0.95 if self.window_is_transparent else 1.0)
+        self.setWindowOpacity(self.window_transparency_percent / 100.0)
         
         if self.current_theme == "light":
             style_sheet = f"""
@@ -775,6 +804,14 @@ class ServerDeployWindow(QMainWindow):
         self.command_input.returnPressed.connect(self._send_command)
         
         self.sidebar_list.currentRowChanged.connect(self._handle_sidebar_change)
+
+        # 连接设置控件的信号到 _save_settings
+        self.theme_combo.currentTextChanged.connect(self._change_theme_and_save)
+        self.transparency_slider.valueChanged.connect(self._update_transparency_and_save)
+        self.log_color_checkbox.stateChanged.connect(self._update_log_color_and_save)
+        self.custom_args_input.textChanged.connect(self.save_settings)
+        self.force_stop_checkbox.stateChanged.connect(self.save_settings)
+        self.stop_timeout_input.textChanged.connect(self.save_settings)
         
         # 初始选中第一个项目
         self.sidebar_list.setCurrentRow(0)
@@ -852,28 +889,29 @@ class ServerDeployWindow(QMainWindow):
         theme_layout.addWidget(QLabel("选择应用主题:"))
         self.theme_combo = QComboBox()
         self.theme_combo.addItems(["亮色", "暗色"])
-        self.theme_combo.setCurrentText("亮色" if self.current_theme == "light" else "暗色")
-        self.theme_combo.currentTextChanged.connect(self._change_theme)
         theme_layout.addWidget(self.theme_combo)
         layout.addWidget(theme_group)
 
         # 新增外观设置
         appearance_group = QGroupBox("外观设置")
         appearance_layout = QVBoxLayout(appearance_group)
-        appearance_layout.addWidget(QLabel("窗口透明度:"))
-        self.transparency_combo = QComboBox()
-        self.transparency_combo.addItems(["不透明", "半透明"])
-        self.transparency_combo.setCurrentText("半透明" if self.window_is_transparent else "不透明")
-        self.transparency_combo.currentTextChanged.connect(self._change_transparency)
-        appearance_layout.addWidget(self.transparency_combo)
+        
+        # 添加透明度滑块和标签
+        self.transparency_label = QLabel(f"窗口透明度: {self.window_transparency_percent}%")
+        appearance_layout.addWidget(self.transparency_label)
+        
+        self.transparency_slider = QSlider(Qt.Horizontal)
+        self.transparency_slider.setRange(10, 100)
+        self.transparency_slider.setTickPosition(QSlider.TicksBelow)
+        self.transparency_slider.setTickInterval(10)
+        appearance_layout.addWidget(self.transparency_slider)
+        
         layout.addWidget(appearance_group)
 
         # 新增日志栏颜色设置
         log_color_group = QGroupBox("日志栏颜色")
         log_color_layout = QHBoxLayout()
         self.log_color_checkbox = QCheckBox("使用深色日志背景")
-        self.log_color_checkbox.setChecked(self.log_is_dark)
-        self.log_color_checkbox.stateChanged.connect(self._update_log_color)
         log_color_layout.addWidget(self.log_color_checkbox)
         log_color_group.setLayout(log_color_layout)
         layout.addWidget(log_color_group)
@@ -904,11 +942,11 @@ class ServerDeployWindow(QMainWindow):
         
         layout.addWidget(stop_timeout_group)
 
-        # 新增的保存按钮
-        save_btn = QPushButton("保存设置")
-        save_btn.setObjectName("actionButton")
-        save_btn.clicked.connect(self._save_settings)
-        layout.addWidget(save_btn)
+        # 新增的恢复默认配置按钮
+        restore_defaults_btn = QPushButton("恢复默认配置")
+        restore_defaults_btn.setObjectName("pageActionButton")
+        restore_defaults_btn.clicked.connect(self._restore_default_settings)
+        layout.addWidget(restore_defaults_btn)
         
         layout.addStretch(1)
         return page
@@ -925,7 +963,8 @@ class ServerDeployWindow(QMainWindow):
         about_text.setOpenExternalLinks(True)
         about_text.setHtml("""
             <h1>Minecraft简易服务器部署工具MCSEasy</h1>
-            <h3>版本1.2.0.0-RC2</h3>
+            <h3>版本1.2.0.0-RC3</h3>
+            <h4>重要信息：这个版本为发布候选版本，有诸多功能不稳定。</h4>
             <hr>
             <h4>项目开发：</h4>
             <p><a href="https://github.com/GoldenHoe">GoldenHoe[↗]</a></p>
@@ -933,6 +972,15 @@ class ServerDeployWindow(QMainWindow):
             <h4>开源协议：</h4>
             <p><a href="https://github.com/HOE-Team/MCSEasy/blob/main/LICENSE">MIT License[↗]</a></p>
             <p>版权所有©2024-2025 HOE Team</p>
+            <h3>法律声明与开源许可</h3>
+            <h4>本软件使用了以下开源库，并遵循其各自的许可协议：</h4>
+            <h4>PyQt5</h4>
+            <p>许可协议： GNU Lesser General Public License (LGPL) v3</p>
+            <p>版权所有： Copyright © Riverbank Computing Limited</p>
+            <p>许可信息： PyQt5 是一个开源项目，遵循 LGPL v3 协议。您可以在遵守该协议条款的前提下自由使用、修改和分发。</p>
+            <h4>其他 Python 标准库</h4>
+            <p>本软件还依赖于 Python 3 的标准库，这些库通常遵循 Python Software Foundation License (PSF)。该许可协议允许商业使用、修改和分发，但要求保留版权和许可声明。</p>
+            <h5>本软件的作者对所有引用的第三方库和其许可协议表示尊重。如果您对任何特定库的许可有疑问，请查阅其官方文档以获取详细信息。</h5>
         """)
         
         about_layout.addWidget(about_text)
@@ -1034,14 +1082,12 @@ class ServerDeployWindow(QMainWindow):
         group_layout = QVBoxLayout(group)
         group_layout.addWidget(QLabel("最小内存(GB):"))
         self.mem_min = QLineEdit()
+        self.mem_min.textChanged.connect(self.save_settings)
         group_layout.addWidget(self.mem_min)
         group_layout.addWidget(QLabel("最大内存(GB):"))
         self.mem_max = QLineEdit()
+        self.mem_max.textChanged.connect(self.save_settings)
         group_layout.addWidget(self.mem_max)
-        self.mem_btn = QPushButton("保存配置")
-        self.mem_btn.setObjectName("actionButton")
-        self.mem_btn.clicked.connect(self._configure_memory)
-        group_layout.addWidget(self.mem_btn)
         layout.addWidget(group)
 
         layout.addStretch(1)
@@ -1090,62 +1136,75 @@ class ServerDeployWindow(QMainWindow):
 
         return self.config_page
 
-    def _change_theme(self, theme_name):
-        """切换亮色/暗色主题"""
+    def _change_theme_and_save(self, theme_name):
+        """切换亮色/暗色主题并保存"""
         self.current_theme = "dark" if theme_name == "暗色" else "light"
         self._apply_styles()
+        self.save_settings()
     
-    def _change_transparency(self, transparency_option):
-        """切换窗口透明度"""
-        self.window_is_transparent = (transparency_option == "半透明")
-        self._apply_styles()
+    def _update_transparency_and_save(self, value):
+        """根据滑块值更新窗口透明度、标签并保存"""
+        self.window_transparency_percent = value
+        self.setWindowOpacity(value / 100.0)
+        self.transparency_label.setText(f"窗口透明度: {value}%")
+        self.save_settings()
     
-    def _update_log_color(self, state):
-        """根据复选框状态更新日志颜色"""
+    def _update_log_color_and_save(self, state):
+        """根据复选框状态更新日志颜色并保存"""
         self.log_is_dark = self.log_color_checkbox.isChecked()
         self._apply_styles()
+        self.save_settings()
 
     def _load_settings(self):
-        """加载保存的配置"""
+        """加载保存的配置并更新UI控件"""
         settings = QSettings("MyServerApp", "ServerDeployWindow")
-        self.current_theme = settings.value("theme", "light")
-        self.log_is_dark = settings.value("log_is_dark", True, type=bool)
-        self.window_is_transparent = settings.value("window_is_transparent", False, type=bool)
         
-        path = settings.value("path", "")
+        # 加载和应用主题设置
+        self.current_theme = settings.value("theme", DEFAULT_SETTINGS["theme"])
+        self.theme_combo.setCurrentText("亮色" if self.current_theme == "light" else "暗色")
+        
+        # 加载和应用窗口透明度
+        self.window_transparency_percent = settings.value("window_transparency_percent", DEFAULT_SETTINGS["window_transparency_percent"], type=int)
+        self.transparency_slider.setValue(self.window_transparency_percent)
+        self.transparency_label.setText(f"窗口透明度: {self.window_transparency_percent}%")
+        
+        # 加载和应用日志栏颜色
+        self.log_is_dark = settings.value("log_is_dark", DEFAULT_SETTINGS["log_is_dark"], type=bool)
+        self.log_color_checkbox.setChecked(self.log_is_dark)
+        self._apply_styles() # 应用主题和颜色样式
+        
+        # 加载和应用启动参数
+        self.custom_args_input.setText(settings.value("custom_args", DEFAULT_SETTINGS["custom_args"]))
+        
+        # 加载和应用服务器停止设置
+        self.force_stop_checkbox.setChecked(settings.value("force_stop_on_timeout", DEFAULT_SETTINGS["force_stop_on_timeout"], type=bool))
+        self.stop_timeout_input.setText(settings.value("stop_timeout", DEFAULT_SETTINGS["stop_timeout"]))
+        
+        # 加载和应用服务器路径和内存设置
+        path = settings.value("path", DEFAULT_SETTINGS["path"])
         self.path_label.setText(path if path else "未选择路径")
-        self.mem_min.setText(settings.value("min_mem", ""))
-        self.mem_max.setText(settings.value("max_mem", ""))
-        if hasattr(self, 'custom_args_input'):
-            self.custom_args_input.setText(settings.value("custom_args", ""))
-        if hasattr(self, 'force_stop_checkbox'):
-            self.force_stop_checkbox.setChecked(settings.value("force_stop_on_timeout", False, type=bool))
-        if hasattr(self, 'stop_timeout_input'):
-            self.stop_timeout_input.setText(settings.value("stop_timeout", "30"))
-        if hasattr(self, 'theme_combo'):
-            self.theme_combo.setCurrentText("亮色" if self.current_theme == "light" else "暗色")
-        if hasattr(self, 'log_color_checkbox'):
-            self.log_color_checkbox.setChecked(self.log_is_dark)
-        if hasattr(self, 'transparency_combo'):
-            self.transparency_combo.setCurrentText("半透明" if self.window_is_transparent else "不透明")
+        self.mem_min.setText(settings.value("min_mem", DEFAULT_SETTINGS["min_mem"]))
+        self.mem_max.setText(settings.value("max_mem", DEFAULT_SETTINGS["max_mem"]))
             
         self.log_signal.emit("[MCSEasy-INFO] 已加载保存的配置")
 
-    def _save_settings(self):
-        """保存当前配置到文件"""
+    def _restore_default_settings(self):
+        """恢复所有设置到默认值"""
         settings = QSettings("MyServerApp", "ServerDeployWindow")
-        settings.setValue("path", self.path_label.text())
-        settings.setValue("min_mem", self.mem_min.text())
-        settings.setValue("max_mem", self.mem_max.text())
-        settings.setValue("custom_args", self.custom_args_input.text())
-        settings.setValue("force_stop_on_timeout", self.force_stop_checkbox.isChecked())
-        settings.setValue("stop_timeout", self.stop_timeout_input.text())
-        settings.setValue("theme", self.current_theme)
-        settings.setValue("log_is_dark", self.log_color_checkbox.isChecked())
-        settings.setValue("window_is_transparent", self.window_is_transparent)
+        for key, value in DEFAULT_SETTINGS.items():
+            settings.setValue(key, value)
+
+        # 立即加载并应用默认值到所有UI控件
+        self._load_settings()
+
+        # 针对用户反馈，显式地清空输入框的内容
+        self.custom_args_input.clear()
+        self.stop_timeout_input.clear()
+        self.save_settings() # 保存清空后的设置
         
-        self.log_signal.emit("[MCSEasy-INFO] 配置已保存")
-        QMessageBox.information(self, "成功", "设置已保存。")
+        self.log_signal.emit("[MCSEasy-INFO] 已恢复默认配置")
+        QMessageBox.information(self, "成功", "已恢复所有设置到默认值。")
+
 
     def _select_directory(self):
         """选择路径并更新对应页面的标签"""
@@ -1153,7 +1212,7 @@ class ServerDeployWindow(QMainWindow):
         if not path:
             return
         self.path_label.setText(path)
-        self._save_settings()
+        self.save_settings()
 
     def _update_log(self, message):
         """更新日志内容"""
@@ -1218,8 +1277,8 @@ class ServerDeployWindow(QMainWindow):
             
             # 如果没有设置内存，使用默认值
             if not min_mem.isdigit() or not max_mem.isdigit():
-                jvm_args.extend(["-Xms2048M", "-Xmx4096M"])
-                self.log_signal.emit("[MCSEasy-INFO] 未配置内存，将使用默认参数：-Xms2048M -Xmx4096M")
+                jvm_args.extend([f"-Xms{DEFAULT_SETTINGS['min_mem']}G", f"-Xmx{DEFAULT_SETTINGS['max_mem']}G"])
+                self.log_signal.emit(f"[MCSEasy-INFO] 未配置内存，将使用默认参数：-Xms{DEFAULT_SETTINGS['min_mem']}G -Xmx{DEFAULT_SETTINGS['max_mem']}G")
             else:
                 jvm_args.extend([f"-Xms{min_mem}G", f"-Xmx{max_mem}G"])
             
@@ -1317,14 +1376,34 @@ class ServerDeployWindow(QMainWindow):
         server_type = self.server_type_combo.currentText()
         version = self.version_combo.currentText()
         
-        if not path or path == "未选择路径":
-            QMessageBox.critical(self, "错误", "请先选择安装路径")
-            return
-        
         if not version or version in ["加载中...", "无可用版本", "获取失败"]:
             QMessageBox.critical(self, "错误", "请选择有效的服务器版本")
             return
-        
+            
+        # 检查是否选择了路径，如果没有则自动生成
+        if not path or path == "未选择路径":
+            base_dir = "Server"
+            target_dir_name = f"{server_type}-{version}"
+            
+            save_path = os.path.join(base_dir, target_dir_name)
+            
+            # 检查文件夹是否已存在并处理重名
+            if os.path.exists(save_path):
+                counter = 2
+                while os.path.exists(f"{save_path}-{counter}"):
+                    counter += 1
+                save_path = f"{save_path}-{counter}"
+            
+            try:
+                os.makedirs(save_path, exist_ok=True)
+                self.path_label.setText(save_path)
+                self.log_signal.emit(f"[MCSEasy-INFO] 未选择路径，已自动创建目录: {save_path}")
+                path = save_path
+            except Exception as e:
+                QMessageBox.critical(self, "错误", f"无法创建目录: {e}")
+                self.log_signal.emit(f"[MCSEasy-ERROR] 创建目录失败: {e}")
+                return
+
         try:
             # 构造下载URL
             download_url = ""
@@ -1338,11 +1417,9 @@ class ServerDeployWindow(QMainWindow):
                         QMessageBox.critical(self, "错误", "未找到该版本对应的构建文件。")
                         return
                     latest_build = builds[-1]['build']
-                    filename = builds[-1]['downloads']['application']['sha256']
                     download_url = f"https://api.papermc.io/v2/projects/paper/versions/{version}/builds/{latest_build}/downloads/paper-{version}-{latest_build}.jar"
             elif server_type == "Fabric":
                 # Fabric API: /v2/versions/loader/<game_version>/<loader_version>/<installer_version>/server/jar
-                # 由于Fabric版本很多，这里只获取最新的Loader版本
                 loader_api = "https://meta.fabricmc.net/v2/versions/loader"
                 with urllib.request.urlopen(loader_api) as response:
                     loader_data = json.loads(response.read().decode())
@@ -1351,9 +1428,15 @@ class ServerDeployWindow(QMainWindow):
                 download_url = f"https://meta.fabricmc.net/v2/versions/loader/{version}/{latest_loader}/0.15.7/server/jar"
             elif server_type == "Forge":
                 # Forge API: 需要获取特定版本对应的下载链接，相对复杂。
-                # 由于API没有直接提供特定版本的下载链接，我们使用简化的方法
-                download_url = f"https://maven.minecraftforge.net/net/minecraftforge/forge/{version}-{version}/forge-{version}-{version}-installer.jar"
-                self.log_signal.emit("[MCSEasy-WARN] Forge 下载链接可能因版本而异，请检查。")
+                api_url = f"https://bmclapi2.bangbang93.com/forge/minecraft/{version}"
+                with urllib.request.urlopen(api_url) as response:
+                    data = json.loads(response.read().decode())
+                    if not data:
+                        QMessageBox.critical(self, "错误", "未找到该版本对应的构建文件。")
+                        return
+                    # 获取最新的推荐或最新版本
+                    latest_build = next((item for item in data if item["recommended"]), data[0])
+                    download_url = f"https://bmclapi2.bangbang93.com/forge/{version}-{latest_build['version']}/forge-{version}-{latest_build['version']}-installer.jar"
             elif server_type == "Vanilla":
                 # Vanilla API: /mc/game/version_manifest.json
                 api_url = "https://piston-meta.mojang.com/mc/game/version_manifest.json"
@@ -1410,7 +1493,7 @@ class ServerDeployWindow(QMainWindow):
             QMessageBox.critical(self, "错误", "最大内存必须大于最小内存")
             return
 
-        self._save_settings()
+        self.save_settings()
 
     def _modify_eula(self, path: str):
         """修改eula.txt以同意协议"""
@@ -1545,15 +1628,6 @@ class ServerDeployWindow(QMainWindow):
         
         self.warning_bar_container.show()
         
-        num_warnings = len(warnings)
-        if num_warnings == 0:
-            self.warning_bar_container.hide()
-            return
-            
-        # 确保标签高度不超过限制
-        max_height = self.height() / 15
-        label_height = int(max_height / num_warnings) if num_warnings > 0 else 0
-        
         for msg in warnings:
             label = QLabel(msg)
             label.setWordWrap(True)
@@ -1565,8 +1639,7 @@ class ServerDeployWindow(QMainWindow):
             else:
                 label.setStyleSheet("background-color: #f1c40f; color: black; padding: 3px; font-weight: bold; border-radius: 4px;")
 
-            if label_height > 0:
-                label.setFixedHeight(label_height)
+            label.setMinimumHeight(25) # 修复: 使用最小高度而不是固定高度
             
             self.warning_bar_layout.addWidget(label)
     
