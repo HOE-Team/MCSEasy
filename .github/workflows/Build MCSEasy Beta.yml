@@ -1,4 +1,4 @@
-name: Build MCSEasy Releases For Cross-Platform
+name: Build MCSEasy Beta For Cross-Platform
 
 on:
   push:
@@ -18,6 +18,11 @@ on:
         description: '发行类型，例如 Beta, RC1, GA'
         required: false
         default: 'Beta'
+      suffix:
+        type: string
+        description: '可选说明后缀，例如 GUIRefactor'
+        required: false
+        default: ''
 
 jobs:
   build-multi:
@@ -71,7 +76,7 @@ jobs:
           $src = "$env:GITHUB_WORKSPACE\url_list.txt"
           $dist = "$env:GITHUB_WORKSPACE\dist\windows"
           Remove-Item -Recurse -Force $dist -ErrorAction SilentlyContinue
-          pyinstaller --clean --noconfirm --log-level=ERROR --onefile --windowed --name=MCSEasy --icon="$env:GITHUB_WORKSPACE\icon.ico" --add-data="$src;." --distpath $dist --workpath "$env:GITHUB_WORKSPACE\build_windows" --specpath "$env:GITHUB_WORKSPACE\build_windows" --optimize=2 --exclude-module tkinter --exclude-module tests main.py
+          pyinstaller --clean --noconfirm --log-level=ERROR --onefile --windowed --name=MCSEasy --icon="$env:GITHUB_WORKSPACE\icon.ico" --add-data="$src;." --distpath $dist --workpath "$env:GITHUB_WORKSPACE\build_windows" --specpath "$env:GITHUB_WORKSPACE\build_windows" --optimize=2 --exclude-module tkinter --exclude-module tests gui-re-main.py
           if (Test-Path $dist) { Get-ChildItem -Path $dist | Write-Output }
           echo "ARTIFACT_PATH=dist\\windows" >> $env:GITHUB_ENV
 
@@ -82,7 +87,7 @@ jobs:
           src="$GITHUB_WORKSPACE/url_list.txt"
           dist="$GITHUB_WORKSPACE/dist/macos"
           rm -rf "$dist"
-          pyinstaller --clean --noconfirm --log-level=ERROR --onefile --windowed --name=MCSEasy --icon="$GITHUB_WORKSPACE/icon.icns" --add-data "$src:." --distpath "$dist" --workpath "$GITHUB_WORKSPACE/build_macos" --specpath "$GITHUB_WORKSPACE/build_macos" --optimize=2 --strip --exclude-module tkinter --exclude-module tests main.py
+          pyinstaller --clean --noconfirm --log-level=ERROR --onefile --windowed --name=MCSEasy --icon="$GITHUB_WORKSPACE/icon.icns" --add-data "$src:." --distpath "$dist" --workpath "$GITHUB_WORKSPACE/build_macos" --specpath "$GITHUB_WORKSPACE/build_macos" --optimize=2 --strip --exclude-module tkinter --exclude-module tests gui-re-main.py
           ls -la "$dist"
           echo "ARTIFACT_PATH=dist/macos" >> $GITHUB_ENV
 
@@ -93,13 +98,13 @@ jobs:
           src="$GITHUB_WORKSPACE/url_list.txt"
           dist="$GITHUB_WORKSPACE/dist/linux"
           rm -rf "$dist"
-          pyinstaller --clean --noconfirm --log-level=ERROR --onefile --name=MCSEasy --icon="$GITHUB_WORKSPACE/icon.png" --add-data "$src:." --distpath "$dist" --workpath "$GITHUB_WORKSPACE/build_linux" --specpath "$GITHUB_WORKSPACE/build_linux" --optimize=2 --strip --exclude-module tkinter --exclude-module tests main.py
+          pyinstaller --clean --noconfirm --log-level=ERROR --onefile --name=MCSEasy --icon="$GITHUB_WORKSPACE/icon.png" --add-data "$src:." --distpath "$dist" --workpath "$GITHUB_WORKSPACE/build_linux" --specpath "$GITHUB_WORKSPACE/build_linux" --optimize=2 --strip --exclude-module tkinter --exclude-module tests gui-re-main.py
           ls -la "$dist"
           echo "ARTIFACT_PATH=dist/linux" >> $GITHUB_ENV
 
       - name: Upload Files
         uses: actions/upload-artifact@v4
         with:
-          name: MCSEasy Release-${{ env.ARTIFACT_TAG }}-${{ matrix.os }}
+          name: MCSEasy Beta-${{ env.ARTIFACT_TAG }}-${{ matrix.os }}
           path: ${{ env.ARTIFACT_PATH }}
           retention-days: 7
