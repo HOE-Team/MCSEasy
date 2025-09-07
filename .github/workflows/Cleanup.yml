@@ -1,109 +1,45 @@
-name: 清理构建工作流
+name: Cleanup Repository
 
 on:
   workflow_dispatch:
     inputs:
-      delete_github_artifacts:
+      delete_artifacts:
         type: boolean
-        description: '是否删除 GitHub 上的 artifact（默认 false）'
+        description: '是否删除 GitHub Artifacts'
         required: false
         default: false
-      artifact_name_prefix:
+      artifact_prefix:
         type: string
-        description: '仅删除以该前缀开头的 artifact'
+        description: '要删除的 artifact 前缀'
         required: false
         default: 'MCSEasy'
+      committer_name:
+        type: string
+        description: 'Commit 使用的名字'
+        required: false
+        default: 'github-actions[bot]'
+      committer_email:
+        type: string
+        description: 'Commit 使用的邮箱'
+        required: false
+        default: '41898282+github-actions[bot]@users.noreply.github.com'
 
 jobs:
   cleanup:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Remove local dist and build directories
+      - name: Remove build artifacts from repo
         run: |
-          rm -rf "${GITHUB_WORKSPACE}/dist" || true
-          rm -rf "${GITHUB_WORKSPACE}/build_"* || true
-          rm -rf "${GITHUB_WORKSPACE}/build-"* || true
-          echo "Local dist and build_* directories removed from repository checkout."
-
-      - name: Remove pyinstaller spec files
-        run: |
-          find "${GITHUB_WORKSPACE}" -maxdepth 1 -name '*.spec' -type f -print -exec rm -f {} \; || true
-          echo "Top-level .spec files removed."
-
-      - name: Delete matching GitHub artifacts
-        if: ${{ github.event.inputs.delete_github_artifacts == 'true' || github.event.inputs.delete_github_artifacts == true }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPO: ${{ github.repository }}
-          PREFIX: ${{ github.event.inputs.artifact_name_prefix || 'MCSEasy' }}
-        run: |
-          python - <<'PY'
-import os, sys, json
-from urllib import request, parse, error
-
-token = os.environ.get('GITHUB_TOKEN')
-repo = os.environ.get('REPO')
-prefix = os.environ.get('PREFIX', 'MCSEasy')
-if not token or not repo:
-    print('GITHUB_TOKEN or REPO not available.')
-    sys.exit(1)
-
-headers = {
-    'Authorization': f'token {token}',
-    'Accept': 'application/vnd.github.v3+json',
-    'User-Agent': 'cleanup-workflow'
-}
-
-def get_artifacts(page=1):
-    url = f'https://api.github.com/repos/{repo}/actions/artifacts?per_page=100&page={page}'
-    req = request.Request(url, headers=headers)
-    try:
-        with request.urlopen(req) as resp:
-            data = resp.read().decode()
-            return json.loads(data)
-    except error.HTTPError as e:
-        print('Failed to list artifacts:', e.code, e.read().decode())
-        return None
-
-page = 1
-deleted = 0
-while True:
-    result = get_artifacts(page=page)
-    if not result:
-        break
-    artifacts = result.get('artifacts', [])
-    if not artifacts:
-        break
-    for a in artifacts:
-        name = a.get('name','')
-        aid = a.get('id')
-        if name.startswith(prefix):
-            del_url = f'https://api.github.com/repos/{repo}/actions/artifacts/{aid}'
-            req = request.Request(del_url, headers=headers, method='DELETE')
-            try:
-                with request.urlopen(req) as resp:
-                    if resp.status == 204:
-                        print(f'Deleted artifact: {name} (id={aid})')
-                        deleted += 1
-                    else:
-                        print(f'Unused response deleting {name}:', resp.status)
-            except error.HTTPError as e:
-                print('Failed to delete artifact', name, aid, e.code, e.read().decode())
-    if len(artifacts) < 100:
-        break
-    page += 1
-
-print(f'Total deleted artifacts with prefix "{prefix}": {deleted}')
-PY
+          rm -rf dist build_* build-*.*/ *.spec
 
       - name: Commit cleaned files (remove from repo)
         env:
-          COMMIT_NAME: 'TNTyep520'
-          COMMIT_EMAIL: 'sbtntyep520@gmail.com'
-          TARGET_BRANCH: 'cleanup/remove-build-artifacts'
+          COMMIT_NAME: ${{ github.event.inputs.committer_name }}
+          COMMIT_EMAIL: ${{ github.event.inputs.committer_email }}
+          TARGET_BRANCH: cleanup/remove-build-artifacts
         run: |
           git config user.name "${COMMIT_NAME}"
           git config user.email "${COMMIT_EMAIL}"
@@ -112,5 +48,27 @@ PY
             echo "No changes to commit."
           else
             git commit -m "chore(ci): clean build/dist artifacts from repository"
-            git push origin HEAD:refs/heads/${TARGET_BRANCH} || echo "Push failed (no permission or branch protected). Please create a PR manually from your branch."
+            git push origin HEAD:refs/heads/${TARGET_BRANCH} || echo "Push failed (branch protected or no permission). Please create PR manually."
           fi
+
+      - name: Delete artifacts from GitHub
+        if: github.event.inputs.delete_artifacts == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prefix = '${{ github.event.inputs.artifact_prefix }}';
+            const artifacts = await github.rest.actions.listArtifactsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 100,
+            });
+            for (const artifact of artifacts.data.artifacts) {
+              if (artifact.name.startsWith(prefix)) {
+                core.info(`Deleting artifact: ${artifact.name}`);
+                await github.rest.actions.deleteArtifact({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  artifact_id: artifact.id,
+                });
+              }
+            }
