@@ -1,0 +1,147 @@
+name: Build MCSEasy For Cross-Platform
+
+on:
+  push:
+    tags:
+      - 'v*'
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      version:
+        type: string
+        description: '版本号，例如 v1.2.0.0'
+        required: false
+        default: 'v0.0.0'
+      release_type:
+        type: string
+        description: '发行类型，例如 Beta, RC1, GA'
+        required: false
+        default: 'GA'
+      suffix:
+        type: string
+        description: '可选说明后缀，例如 GUIRefactor'
+        required: false
+        default: ''
+
+jobs:
+  build-multi:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.10.11']
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Show runner info
+        run: |
+          echo "RUNNER_OS=${RUNNER_OS}"
+          uname -a || true
+          python --version || true
+          pip --version || true
+
+      - name: Setup Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; else pip install pyinstaller psutil PyQt5; fi
+
+      - name: Install UPX on Linux
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y upx-ucl || true
+
+      - name: Install UPX on macOS
+        if: runner.os == 'macOS'
+        run: |
+          brew install upx || true
+
+      - name: Install UPX on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install upx -y || true
+
+      - name: Normalize inputs and build artifact tag
+        shell: bash
+        run: |
+          VERSION="${{ github.event.inputs.version || 'v0.0.0' }}"
+          RELEASE_TYPE="${{ github.event.inputs.release_type || 'GA' }}"
+          SUFFIX="${{ github.event.inputs.suffix || '' }}"
+          case "$RELEASE_TYPE" in
+            Beta|beta) RELEASE_TYPE='Beta' ;;
+            RC|rc|RC1|rc1) RELEASE_TYPE='RC1' ;;
+            GA|ga) RELEASE_TYPE='GA' ;;
+            *) RELEASE_TYPE='GA' ;;
+          esac
+          if [ -n "$SUFFIX" ]; then ART_TAG="${VERSION}-${RELEASE_TYPE}-${SUFFIX}"; else ART_TAG="${VERSION}-${RELEASE_TYPE}"; fi
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+          echo "RELEASE_TYPE=${RELEASE_TYPE}" >> $GITHUB_ENV
+          echo "SUFFIX=${SUFFIX}" >> $GITHUB_ENV
+          echo "ARTIFACT_TAG=${ART_TAG}" >> $GITHUB_ENV
+          echo "artifact_name=MCSEasy ${ART_TAG}-${{ matrix.os }}-py${{ matrix.python-version }}" >> $GITHUB_OUTPUT
+
+      - name: Build on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $dist = "dist\windows"
+          Remove-Item -Recurse -Force $dist -ErrorAction SilentlyContinue
+          pyinstaller --clean --noconfirm --log-level=ERROR --onefile --windowed --name=MCSEasy --icon=icon.ico --add-data="url_list.txt;." --distpath $dist --workpath build_windows --specpath build_windows --version-file=Version.txt --optimize=2 --exclude-module tkinter --exclude-module tests gui-re-main.py
+          ls $dist
+
+      - name: Build on macOS
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          dist=dist/macos
+          rm -rf "$dist"
+          pyinstaller --clean --noconfirm --log-level=ERROR --onefile --windowed --name=MCSEasy --icon=icon.icns --add-data="url_list.txt:." --distpath "$dist" --workpath build_macos --specpath build_macos --optimize=2 --strip --exclude-module tkinter --exclude-module tests gui-re-main.py
+          ls -la "$dist"
+
+      - name: Build on Linux
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          dist=dist/linux
+          rm -rf "$dist"
+          pyinstaller --clean --noconfirm --log-level=ERROR --onefile --name=MCSEasy --icon=icon.png --add-data="url_list.txt:." --distpath "$dist" --workpath build_linux --specpath build_linux --optimize=2 --strip --exclude-module tkinter --exclude-module tests gui-re-main.py
+          ls -la "$dist"
+
+      - name: Set artifact path for upload on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          echo "ARTIFACT_PATH=dist\\windows" >> $env:GITHUB_ENV
+
+      - name: Set artifact path for upload on macOS
+        if: runner.os == 'macOS'
+        run: |
+          echo "ARTIFACT_PATH=dist/macos" >> $GITHUB_ENV
+
+      - name: Set artifact path for upload on Linux
+        if: runner.os == 'Linux'
+        run: |
+          echo "ARTIFACT_PATH=dist/linux" >> $GITHUB_ENV
+
+      - name: Upload Files
+        uses: actions/upload-artifact@v4
+        with:
+          name: MCSEasy ${{ env.ARTIFACT_TAG }} - ${{ matrix.os }} - py${{ matrix.python-version }}
+          path: ${{ env.ARTIFACT_PATH }}
+          retention-days: 7
