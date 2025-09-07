@@ -1,0 +1,74 @@
+name: Cleanup Repository
+
+on:
+  workflow_dispatch:
+    inputs:
+      delete_artifacts:
+        type: boolean
+        description: '是否删除 GitHub Artifacts'
+        required: false
+        default: false
+      artifact_prefix:
+        type: string
+        description: '要删除的 artifact 前缀'
+        required: false
+        default: 'MCSEasy'
+      committer_name:
+        type: string
+        description: 'Commit 使用的名字'
+        required: false
+        default: 'github-actions[bot]'
+      committer_email:
+        type: string
+        description: 'Commit 使用的邮箱'
+        required: false
+        default: '41898282+github-actions[bot]@users.noreply.github.com'
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Remove build artifacts from repo
+        run: |
+          rm -rf dist build_* build-*.*/ *.spec
+
+      - name: Commit cleaned files (remove from repo)
+        env:
+          COMMIT_NAME: ${{ github.event.inputs.committer_name }}
+          COMMIT_EMAIL: ${{ github.event.inputs.committer_email }}
+          TARGET_BRANCH: cleanup/remove-build-artifacts
+        run: |
+          git config user.name "${COMMIT_NAME}"
+          git config user.email "${COMMIT_EMAIL}"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "chore(ci): clean build/dist artifacts from repository"
+            git push origin HEAD:refs/heads/${TARGET_BRANCH} || echo "Push failed (branch protected or no permission). Please create PR manually."
+          fi
+
+      - name: Delete artifacts from GitHub
+        if: github.event.inputs.delete_artifacts == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prefix = '${{ github.event.inputs.artifact_prefix }}';
+            const artifacts = await github.rest.actions.listArtifactsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 100,
+            });
+            for (const artifact of artifacts.data.artifacts) {
+              if (artifact.name.startsWith(prefix)) {
+                core.info(`Deleting artifact: ${artifact.name}`);
+                await github.rest.actions.deleteArtifact({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  artifact_id: artifact.id,
+                });
+              }
+            }
