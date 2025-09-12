@@ -59,30 +59,20 @@ MCSEasy拥有多个服务端的下载支持，Forge端使用 [BMCLAPI[↗]](http
 
 ## 使用指南
 ### 程序硬性要求
-1. 计算机运行受支持的Windows版本
-	> [!NOTE]
-    > #### 支持的Windows版本:  
-    > - Windows 7 with Service Pack 1/2(Build 7601/7602)
-	> - Windows Server 2008 R2 Service Pack 1/2(Build 7601/7602)
-	> - Windows 8(Build 9200)
-	> - Windows Server 2012(Build 9200)
-	> - Windows 8.1(Build 9600)
-	> - Windows Server 2012 R2(Build 9600)
-	> - Windows 10
-	> - Windows Server 2016/2019/2022(Build 14393/17763/20348)
-	> - Windows 11
-	> - Windows Server 2025(Build 26100)
+1. 计算机运行受支持的Windows/macOS/Linux版本
 
-	> [!WARNING]  
-	> 暂不支持Linux发行版。  
+
+> [!WARNING]  
+> 对Linux/macOS平台的构建有严重错误，暂时不建议使用。  
 2. 网络连接。
 
-### 建议
+### 建议拥有的软硬件环境
 1. Java Development Kit(Java JDK) 8或OpenJDK 8。
 2. 足够的磁盘空间用于Minecraft服务器文件。
-3. CPU推荐2核心及以上，8核心以上最佳。
-4. 拥有至少2GB RAM。
-5. 使用100Mbps和以上的以太网连接。
+3. CPU推荐2核心（物理核）及以上，8核心以上最佳。
+4. 拥有至少2GB RAM（物理内存，非虚拟内存或SWAP分区）。
+5. 使用100Mbps和以上的以太网连接
+> [!NOTE]建议使用VPN以更快速的获取服务器版本列表和下载服务器。
 6. 使用frp等内网穿透软件（公网IP可忽略）。
 7. 下载Python3.6以上版本。
 
