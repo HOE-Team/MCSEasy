@@ -132,4 +132,4 @@ This project follows the [MIT License[↗]](https://github.com/GoldenHoe/MCSEasy
 > 4.  **The author provides no warranty**. If using this software causes any problems, you take full responsibility.  
 
 > [!NOTE]  
-> This Traditional Chinese document was translated with the assistance of ChatGPT
+> This English document was translated with the assistance of ChatGPT
