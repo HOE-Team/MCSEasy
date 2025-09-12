@@ -40,7 +40,7 @@
 > - ArchLinux 2025.09.01(有主题显示问题)  
 ### ❔ 理论上可以运行本程序的Linux发行版
 > - Ubuntu及其衍生发行版
-> - 新新的GNU/Linux
+> - 新的GNU/Linux
 > - WSL(适用于Windows的Linux子系统)上运行的Linux发行版
 
 
