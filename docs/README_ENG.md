@@ -1,4 +1,4 @@
-# Minecraft Simple Server Launcher — MCSEasy
+<h1 align="center">Minecraft Easy Server Launcher MCSEasy</h1>
 
 <p align="center">
   <img src="../logo.svg" alt="MCSEasy Logo" width="150">
@@ -6,132 +6,130 @@
 
 <div align="center">
 <p align="center">
-  <b><a href=../README.md>简体中文</a> | <a href=README_ZHTW.md_>繁體中文</a> | <a>English</a></b>
-  </p>
+  <b><a href="../README.md">简体中文</a> | <a href="README_ZHTW.md">繁體中文</a> | <a>English</a></b>
+</p>
 
 [![Stars](https://img.shields.io/github/stars/GoldenHoe/MCSEasy?style=for-the-badge&logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEiIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiI+PHBhdGggZD0iTTggLjI1YS43NS43NSAwIDAgMSAuNjczLjQxOGwxLjg4MiAzLjgxNSA0LjIxLjYxMmEuNzUuNzUgMCAwIDEgLjQxNiAxLjI3OWwtMy4wNDYgMi45Ny43MTkgNC4xOTJhLjc1MS43NTEgMCAwIDEtMS4wODguNzkxTDggMTIuMzQ3bC0zLjc2NiAxLjk4YS43NS43NSAwIDAgMS0xLjA4OC0uNzlsLjcyLTQuMTk0TC44MTggNi4zNzRhLjc1Ljc1IDAgMCAxIC40MTYtMS4yOGw0LjIxLS42MTFMNy4zMjcuNjY4QS43NS43NSAwIDAgMSA4IC4yNVoiIGZpbGw9IiNlYWM1NGYiLz48L3N2Zz4=&logoSize=auto&label=Stars&labelColor=444444&color=eac54f)](https://github.com/GoldenHoe/MCSEasy)
 [![LICENSE](https://img.shields.io/github/license/GoldenHoe/MCSEasy?style=for-the-badge)](https://github.com/GoldenHoe/MCSEasy/blob/main/LICENSE)
 ![GitHub Release](https://img.shields.io/github/v/release/GoldenHoe/MCSEasy?label=Release&logo=github&style=for-the-badge)
 </div>
 
-### For *helping users who want to create a Minecraft server to start and monitor their MC server*
+### Designed to *help users who want to create Minecraft servers to launch and monitor their servers*
+
 
 ## Overview
 
-This project is a **tool for automating the deployment of Minecraft servers**, written in **Python** and packaged with **PyInstaller**.
-It is intended to **simplify server installation and startup**, making it easier for users to deploy and monitor their Minecraft servers.
+This program is a **tool for automating the deployment of Minecraft servers**, written in **Python** and packaged with **PyInstaller**.  
+<br>Its purpose is to **simplify the installation and startup process so that users can more easily deploy and monitor their Minecraft servers**.
 
-## Why choose MCSEasy?
+## What are the advantages of MCSEasy?
 
 ### ✨ Lightweight
-Small footprint — no need to install third-party applications; run with a single click.
+Small footprint, no need to install third-party apps, click and run.  
 <div align="center">
     <img src="../images/MXIntro.png" style="border-radius: 5px;" alt="MXIntro">
 </div>
 
-### ⭐ Fast Management
-A clear UI makes server management quick and convenient.
+
+### ⭐ Quick Management
+The UI is clear and straightforward, making server management fast and convenient.  
 <div align="center">
-    <img src="../images/UIIntro.png" width="75%" style="border-radius: 5px;" alt="UIIntro">
+    <img src="../images/UIintro.png" width="75%" style="border-radius: 5px;" alt="UIIntro">
 </div>
 
 ### 🛠️ Version Support
-MCSEasy supports downloading multiple server types. Forge downloads use high-speed sources provided by [BMCLAPI ↗](https://bmclapidoc.bangbang93.com/).
+MCSEasy supports downloading multiple server types. Forge servers use [BMCLAPI[↗]](https://bmclapidoc.bangbang93.com/) to provide high-speed downloads.  
 <div align="center">
     <img src="../images/VSIntro.png" width="75%" style="border-radius: 5px;" alt="VSIntro">
 </div>
 
-> **Note**
-> #### Server types supported for download in MCSEasy 1.2
-> - Vanilla
-> - Paper
-> - Forge
-> - Fabric
+> [!NOTE]
+> #### Server types supported in MCSEasy 1.2  
+> - Vanilla  
+> - Paper  
+> - Forge  
+> - Fabric  
+
 
 ### 🎨 Customization
-Provides basic personalization options and an optional semi-transparent window mode.
+Provides basic personalization options as well as an optional translucent window setting.  
 <div align="center">
-    <img src="./images/GXHIntro.png" width="75%" style="border-radius: 5px;" alt="VSIntro">
+    <img src="../images/GXHIntro.png" width="75%" style="border-radius: 5px;" alt="VSIntro">
 </div>
 
-## Usage
+## User Guide
+### System Requirements
+1. A computer running a supported version of Windows/macOS/Linux  
+See [Supported OS Versions(Simplified Chinese)[↗]](SUPPORTING_OS.md)
 
-### System requirements (mandatory)
-1. A supported Windows version:
-    > **Supported Windows versions:**
-    > - Windows 7 with Service Pack 1/2 (Build 7601/7602)
-    > - Windows Server 2008 R2 Service Pack 1/2 (Build 7601/7602)
-    > - Windows 8 (Build 9200)
-    > - Windows Server 2012 (Build 9200)
-    > - Windows 8.1 (Build 9600)
-    > - Windows Server 2012 R2 (Build 9600)
-    > - Windows 10
-    > - Windows Server 2016/2019/2022 (Build 14393/17763/20348)
-    > - Windows 11
-    > - Windows Server 2025 (Build 26100)
-
-    > **Warning:**
-    > Linux distributions are not supported at this time.
+> [!WARNING]  
+> Builds for Linux/macOS currently contain serious errors. Use is not recommended.  
 2. Network connection.
 
-### Recommendations
-1. Java Development Kit (JDK) 8 or OpenJDK 8.
-2. Sufficient disk space for Minecraft server files.
-3. CPU: recommended 2 cores or more (8 cores recommended for best performance).
-4. At least 2 GB of RAM.
-5. Use Ethernet with 100 Mbps or higher.
-6. Use NAT traversal tools such as frp if needed (public IP not required).
-7. Install Python 3.6 or newer.
+### Recommended Hardware and Software
+1. Java Development Kit (JDK) 8 or OpenJDK 8.  
+2. Sufficient disk space for Minecraft server files.  
+3. CPU with at least 2 cores (physical), 8 cores or more recommended.  
+4. At least 2 GB of RAM (physical memory, not virtual memory or SWAP).  
+5. Ethernet connection of 100 Mbps or higher.  
+> [!NOTE] Using a VPN is recommended for faster server version list retrieval and downloads.  
+6. FRP or other NAT traversal software (ignore if you have a public IP).  
+7. Python 3.6 or higher installed.  
 
-## Download
+## Download Options
+1. Clone the project directly from the GitHub repository.  
+2. Download the release archive and extract it to a specified directory.  
+3. Download a release version (already packaged as an executable `.exe` file).  
 
-1. Clone this repository from GitHub.
-2. Download the packaged archive and extract it to a folder.
-3. Download the release build (packaged as an .exe).
+## Launch
 
-## Start
-
-After extraction, **run directly**: `MCSEasy-vx.x.x.x-<release-type>.exe`
-
-### Release type notes (applied since v1.2.0.0-Beta1)
-- Beta (testing, unstable)
-- RC (Release Candidate)
-- GA (General Availability, stable release)
-- LTS (Long Term Support — only one LTS release: `LTS Release-v1.0.0`; this release became unavailable after November 1, 2024)
-- EP (Emergency Patch)
-
+After extraction, **simply run** `MCSEasy-vx.x.x.x-<release type>.exe`  
+### Release Type Naming (effective from v1.2.0.0-Beta1 onwards)
+- Beta (test version, unstable)  
+- RC (Release Candidate)  
+- GA (General Availability, stable release)  
+- LTS (Long-Term Support, only one LTS release: `LTS Release-v1.0.0`, which became unavailable after November 1, 2024)  
+- EP (Emergency Patch, urgent bugfix release)  
+- 
 ```
-# Version examples
-MCSEasy <version>-<release-type>
 
-MCSEasy v1.2.0.0-Beta1 (Beta)
+# Version Example
+
+MCSEasy <version>-<release type>
+
+MCSEasy v1.2.0.0-Beta1 (Beta version)
 MCSEasy v1.2.0.0-RC1 (Release Candidate)
-MCSEasy v1.2.0.0-RC1-GUIRefactor (RC with descriptor suffix)
-MCSEasy v1.2.0.0-GA (General Availability)
+MCSEasy v1.2.0.0-RC1-GUIRefactor (Release Candidate with description suffix)
+MCSEasy v1.2.0.0-GA (Stable release)
+
 ```
 
 ## Notes
 
-Depending on your computer performance and network conditions, some operations (downloads and startup) may take some time.
+Depending on your computer performance and network conditions, some operations (download and startup) may take some time.
 
-## *AI Content Note
+## * AI Content Notice
 
-Some GUI code in this project was assisted by ChatGPT / Google Gemini and later reviewed and modified by humans.
-AI-generated content is used to speed development and is not guaranteed to be perfect. Project maintenance and responsibility remain with the developers.
+Some parts of the GUI code in this project were generated with the assistance of ChatGPT / Google Gemini, and later reviewed and modified by humans.  
+AI-generated content is only used to improve development efficiency and does not guarantee complete correctness. Project maintenance and responsibility are borne by the developer.  
 
-## Contributing & Feedback
+## Contribution & Feedback
 
-If you find issues or have suggestions, please email **hoe_team@outlook.com**. Contributions of code, documentation, and testing are welcome.
-Project app icon generated with [AppIcon Force ↗](https://zhangyu1818.github.io/appicon-forge/).
+If you find any issues or have suggestions for improvements, please email **hoe_team@outlook.com**. Contributions of all kinds are welcome, including code, documentation, and testing.  
+The project’s application icon was generated by [AppIcon Force[↗]](https://zhangyu1818.github.io/appicon-forge/).  
 
 ## License
+Copyright © 2024-2025 HOE Team  
 
-Copyright © 2024–2025 HOE Team
+This project follows the [MIT License[↗]](https://github.com/GoldenHoe/MCSEasy/blob/main/LICENSE)
 
-This project is licensed under the [MIT License ↗](https://github.com/GoldenHoe/MCSEasy/blob/main/LICENSE).
+> [!NOTE]
+> This license means:  
+> 
+> 1.  **You can freely use this project’s code**, whether in personal or commercial projects.  
+> 2.  **You can modify and redistribute** the code.  
+> 3.  **You can even use it to develop commercial software and sell it**, as long as you include the original MIT license text and copyright notice in your product.  
+> 4.  **The author provides no warranty**. If using this software causes any problems, you take full responsibility.  
 
-> **Note** — This license means:
-> 1. **You are free to use this code** for personal or commercial projects.
-> 2. **You may modify and redistribute** the code.
-> 3. **You may use it to develop and sell commercial software**, provided you include the original MIT license text and copyright notice.
-> 4. **The author provides no warranty**; you use the software at your own risk.
+> [!NOTE]  
+> This Traditional Chinese document was translated with the assistance of ChatGPT

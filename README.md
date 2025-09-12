@@ -34,7 +34,7 @@
 ### ⭐ 快捷管理
 UI界面一目了然，服务器管理方便快捷  
 <div align="center">
-    <img src="./images/UIIntro.png" width="75%" style="border-radius: 5px;" alt="UIIntro">
+    <img src="./images/UIintro.png" width="75%" style="border-radius: 5px;" alt="UIIntro">
 </div>
 
 ### 🛠️ 版本支持
@@ -58,9 +58,9 @@ MCSEasy拥有多个服务端的下载支持，Forge端使用 [BMCLAPI[↗]](http
 </div>
 
 ## 使用指南
-### 程序硬性要求
-1. 计算机运行受支持的Windows/macOS/Linux版本
-
+### 程序硬性要求    
+1. 计算机运行受支持的Windows/macOS/Linux版本  
+在此查看[支持的系统版本[↗]](./docs/SUPPORTING_OS.md)
 
 > [!WARNING]  
 > 对Linux/macOS平台的构建有严重错误，暂时不建议使用。  
