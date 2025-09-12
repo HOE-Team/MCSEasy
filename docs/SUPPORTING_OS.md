@@ -22,7 +22,7 @@
 ### ❌ 程序不支持的Windows版本
 > - Windows 7(Build 7600)  
 > - Windows Vista及其Service Pack(Build 6000/6001/6002/6003)  
-> - Windows Seever 2008及其Service Pack(6000/6001/6002/6003)  
+> - Windows Server 2008及其Service Pack(6000/6001/6002/6003)  
 > - Windows XP及其Service Pack(Build 2600)  
 > - Windows Server 2003(Build 3790)  
 > - 更早的Windows NT架构(如Windows NT4.0/2000/Me)、传统架构Windows(如Windows 95/98)
