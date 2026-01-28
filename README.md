@@ -4,6 +4,9 @@
   <img src="logo.svg" alt="MCSEasy Logo" width="150">
 </p>
 
+> [!IMPORTANT]
+> 因为出现了一些技术问题，MCSEasy仓库将被暂时归档，恢复时间待定，详见[HOE Team 理事会关于 HOE Team 暂停维护 MCSEasy 项目的技术说明](https://github.com/HOE-Team/Public_Document/blob/main/HOE%20Team%E7%90%86%E4%BA%8B%E4%BC%9A%E5%85%B3%E4%BA%8EHOE%20Team%E6%9A%82%E5%81%9C%E7%BB%B4%E6%8A%A4MCSEasy%E9%A1%B9%E7%9B%AE%E7%9A%84%E6%8A%80%E6%9C%AF%E8%AF%B4%E6%98%8E.pdf)
+
 <div align="center">
 <p align="center">
   <b><a>简体中文</a> | <a href="./docs/README_ZHTW.md">繁體中文</a> | <a href="./docs/README_ENG.md">English</a></b>
@@ -58,7 +61,8 @@ MCSEasy拥有多个服务端的下载支持，Forge端使用 [BMCLAPI[↗]](http
 </div>
 
 ## 使用指南
-### 程序硬性要求    
+### 程序硬性要求
+    
 1. 计算机运行受支持的Windows/macOS/Linux版本  
 在此查看[支持的系统版本[↗]](./docs/SUPPORTING_OS.md)
 
@@ -128,3 +132,4 @@ Copyright © 2024-2025 HOE Team
 > 2.  **你可以修改并重新发布**这个代码。
 > 3.  **你甚至可以用它来开发商业软件并销售**，只要你在你的产品中包含原始的 MIT 许可证文本和版权声明。
 > 4.  **作者不提供任何保证**，如果使用该软件导致任何问题，你需要自己承担风险。
+
