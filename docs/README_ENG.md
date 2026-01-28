@@ -4,6 +4,9 @@
   <img src="../logo.svg" alt="MCSEasy Logo" width="150">
 </p>
 
+>[!IMPORTANT]
+>Due to unresolved technical issues, the MCSEasy repository will be temporarily archived. The restoration timeline is pending. For details, please refer to the [HOE Team Council Technical Statement on the Suspension of Maintenance for the MCSEasy Project](https://github.com/HOE-Team/Public_Document/blob/main/HOE%20Team%E7%90%86%E4%BA%8B%E4%BC%9A%E5%85%B3%E4%BA%8EHOE%20Team%E6%9A%82%E5%81%9C%E7%BB%B4%E6%8A%A4MCSEasy%E9%A1%B9%E7%9B%AE%E7%9A%84%E6%8A%80%E6%9C%AF%E8%AF%B4%E6%98%8E.pdf).
+
 <div align="center">
 <p align="center">
   <b><a href="../README.md">简体中文</a> | <a href="README_ZHTW.md">繁體中文</a> | <a>English</a></b>
