@@ -34,7 +34,7 @@
 ## Linux
 > [!IMPORTANT]
 > 1. 必须在Linux发行版上安装桌面环境(DE)或在WSL上使用WSLg
-> 2. 必须在Linux发行版安装python3和运行时需要的第三方库（PyQt5和psutil），具体安装办法请参阅[在Linux或macOS上安装运行需要的Python和第三方库[↗]](INSTALL_PYTHON.md)
+> 2. 必须在Linux发行版安装python3和运行时需要的第三方库（PySide6 和 psutil），具体安装办法请参阅[在Linux或macOS上安装运行需要的Python和第三方库[↗]](INSTALL_PYTHON.md)
 
 ### ✅ 已证明的可以运行本程序的Linux发行版  
 > - ArchLinux 2025.09.01(有主题显示问题)  

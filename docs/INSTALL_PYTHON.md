@@ -52,15 +52,15 @@ python3 --version
 注意： 官方安装包会将 Python 安装到 /Library/Frameworks/Python.framework/ 目录下，不会影响系统自带的 Python。
 
 ## 2. 安装项目使用的外部库
-使用pip安装需要的包
+在项目根目录执行（会安装 PySide6 与 psutil）：
 ```bash
-python -m pip install pyqt5 psutil
+python -m pip install -r requirements.txt
 ```
 输入`python`进入Python用`import`函数尝试导入来验证是否安装成功，无报错即安装完成
 ```bash
 $ python
 Python 3.12.11 (main, Jun  9 2025, 15:36:10) 
 Type "help", "copyright", "credits" or "license" for more information.
->>> import psutil,PyQt5
+>>> import psutil, PySide6
 >>>
 ```

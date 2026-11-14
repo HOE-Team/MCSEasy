@@ -1,3 +1,10 @@
+> [!IMPORTANT]
+> **v1.5.0 update**: the UI layer has been rewritten (PyQt5 → PySide6) around a state-driven workspace
+> that walks you from "choose a folder" to "server running". It also adds dark/light themes, per-instance
+> consoles, process-level metrics, one-click Forge/NeoForge installers, full keyboard navigation and
+> WCAG-AA contrast. Install dependencies with `pip install -r requirements.txt`.
+> See the [Chinese README](../README.md) for details.
+
 <h1 align="center">Minecraft Easy Server Launcher MCSEasy</h1>
 
 <p align="center">

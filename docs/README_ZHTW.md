@@ -1,3 +1,9 @@
+> [!IMPORTANT]
+> **v1.5.0 更新**：本版本重写了界面层（PyQt5 → PySide6），主页改为「状态驅動工作區」，
+> 從選擇目錄、準備啟動到執行監視一路引導；同時加入深淺色主題、多實例獨立控制台、進程級監控、
+> Forge/NeoForge 安裝器一鍵執行、完整鍵盤導覽與 WCAG-AA 對比度。
+> 安裝依賴請改用 `pip install -r requirements.txt`。詳細說明請參閱[简体中文 README](../README.md)。
+
 <h1 align="center">Minecraft簡易開服程式MCSEasy</h1>
 
 <p align="center">
