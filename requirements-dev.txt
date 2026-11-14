@@ -1,0 +1,4 @@
+# 开发与打包依赖
+-r requirements.txt
+# 打包为单文件可执行程序
+pyinstaller>=6.3
